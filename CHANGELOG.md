@@ -3,10 +3,16 @@
 ## [Unreleased]
 
 
+## [v299] - 2025-04-07
+
+
+## [v298] - 2025-04-03
+
+- Added observability metrics (https://github.com/heroku/heroku-buildpack-ruby/pull/1569)
+
 ## [v297] - 2025-03-26
 
 - Ruby 3.1.7 and 3.2.8 is now available
-
 
 ## [v296] - 2025-03-21
 
@@ -1655,7 +1661,9 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v297...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v299...main
+[v299]: https://github.com/heroku/heroku-buildpack-ruby/compare/v298...v299
+[v298]: https://github.com/heroku/heroku-buildpack-ruby/compare/v297...v298
 [v297]: https://github.com/heroku/heroku-buildpack-ruby/compare/v296...v297
 [v296]: https://github.com/heroku/heroku-buildpack-ruby/compare/v295...v296
 [v295]: https://github.com/heroku/heroku-buildpack-ruby/compare/v294...v295
