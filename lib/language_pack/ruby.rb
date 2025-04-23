@@ -69,7 +69,6 @@ class LanguagePack::Ruby < LanguagePack::Base
     #   warn(<<-WARNING)
 # You are using the `asset_sync` gem.
 # This is not recommended.
-# See https://devcenter.heroku.com/articles/please-do-not-use-asset-sync for more information.
 # WARNING
     # end
   end
@@ -99,8 +98,8 @@ class LanguagePack::Ruby < LanguagePack::Base
       run_assets_precompile_rake_task
     end
     @report.capture(
-      "railties_version" => bundler.gem_version('railties'),
-      "rack_version" => bundler.gem_version('rack')
+      "gem.railties_version" => bundler.gem_version('railties'),
+      "gem.rack_version" => bundler.gem_version('rack')
     )
     config_detect
     best_practice_warnings
@@ -1225,7 +1224,6 @@ MESSAGE
         )
       return [false, <<-MESSAGE]
 Need to recompile gems for CVE-2014-2014-9130. Clearing bundler cache.
-See https://devcenter.heroku.com/changelog-items/1016.
 MESSAGE
     end
 
@@ -1313,7 +1311,6 @@ MESSAGE
           bundler.has_gem?("psych")
         )
       puts "Need to recompile gems for CVE-2014-2014-9130. Clearing bundler cache."
-      puts "See https://devcenter.heroku.com/changelog-items/1016."
       purge_bundler_cache
     end
 
