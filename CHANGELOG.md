@@ -3,6 +3,24 @@
 ## [Unreleased]
 
 
+## [v306] - 2025-05-08
+
+- JRuby 9.4.12.0, 9.4.12.1, 10.0.0.0, and 10.0.0.1 is now available
+
+
+## [v305] - 2025-04-28
+
+- Fix `cp --update=none` warning `heroku-22` (https://github.com/heroku/heroku-buildpack-ruby/pull/1588)
+
+## [v304] - 2025-04-28
+
+- Fix `cp --update=none` on `heroku-20` (https://github.com/heroku/heroku-buildpack-ruby/pull/1586)
+
+## [v303] - 2025-04-25
+
+- Ruby 3.5.0-preview1 is now available
+- Fix warning message about `cp -n` (https://github.com/heroku/heroku-buildpack-ruby/pull/1583)
+
 ## [v302] - 2025-04-16
 
 - Ruby 3.3.8 is now available
@@ -1675,7 +1693,11 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v302...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v306...main
+[v306]: https://github.com/heroku/heroku-buildpack-ruby/compare/v305...v306
+[v305]: https://github.com/heroku/heroku-buildpack-ruby/compare/v304...v305
+[v304]: https://github.com/heroku/heroku-buildpack-ruby/compare/v303...v304
+[v303]: https://github.com/heroku/heroku-buildpack-ruby/compare/v302...v303
 [v302]: https://github.com/heroku/heroku-buildpack-ruby/compare/v301...v302
 [v301]: https://github.com/heroku/heroku-buildpack-ruby/compare/v300...v301
 [v300]: https://github.com/heroku/heroku-buildpack-ruby/compare/v299...v300
