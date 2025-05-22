@@ -16,12 +16,11 @@ class LanguagePack::Base
   include LanguagePack::ShellHelpers
   extend LanguagePack::ShellHelpers
 
-  # VENDOR_URL           = ENV['BUILDPACK_VENDOR_URL'] || "https://s3-external-1.amazonaws.com/heroku-buildpack-ruby"
   VENDOR_URL           = ENV['BUILDPACK_VENDOR_URL'] || "https://ruby-binaries.scalingo.com"
-  DEFAULT_LEGACY_STACK = "scalingo"
+  # DEFAULT_LEGACY_STACK = "scalingo"
   ROOT_DIR             = File.expand_path("../../..", __FILE__)
-  MULTI_ARCH_STACKS    = ["scalingo-24"]
-  KNOWN_ARCHITECTURES  = ["amd64", "arm64"]
+  MULTI_ARCH_STACKS    = []
+  KNOWN_ARCHITECTURES  = ["amd64"]
 
   attr_reader :build_path, :cache, :stack
 
@@ -100,7 +99,6 @@ class LanguagePack::Base
       puts @deprecations.join("\n")
     end
     Kernel.puts ""
-    mcount "success"
   end
 
   def build_release
@@ -127,32 +125,6 @@ class LanguagePack::Base
     msg =  "No Procfile detected, using the default web server (webrick)\n"
     msg << "http://doc.scalingo.com/languages/ruby/web-server"
     warn msg
-  end
-
-
-
-  # log output
-  # Ex. log "some_message", "here", :someattr="value"
-  def log(*args)
-    args.concat [:id => @id]
-    args.concat [:framework => self.class.to_s.split("::").last.downcase]
-
-    start = Time.now.to_f
-    log_internal args, :start => start
-
-    if block_given?
-      begin
-        ret = yield
-        finish = Time.now.to_f
-        log_internal args, :status => "complete", :finish => finish, :elapsed => (finish - start)
-        return ret
-      rescue StandardError => ex
-        finish  = Time.now.to_f
-        message = Shellwords.escape(ex.message)
-        log_internal args, :status => "error", :finish => finish, :elapsed => (finish - start), :message => message
-        raise ex
-      end
-    end
   end
 
 private ##################################
@@ -213,21 +185,5 @@ private ##################################
 
   def set_export_path(key, val)
     export key, val, option: :path
-  end
-
-  def log_internal(*args)
-    message = build_log_message(args)
-    %x{ logger -p user.notice -t "slugc[$$]" "buildpack-ruby #{message}" }
-  end
-
-  def build_log_message(args)
-    args.map do |arg|
-      case arg
-        when Float then "%0.2f" % arg
-        when Array then build_log_message(arg)
-        when Hash  then arg.map { |k,v| "#{k}=#{build_log_message([v])}" }.join(" ")
-        else arg
-      end
-    end.join(" ")
   end
 end
