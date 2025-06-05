@@ -3,6 +3,18 @@
 ## [Unreleased]
 
 
+## [v310] - 2025-05-27
+
+- Introduce internal metrics for deriving Ruby version directly from the `Gemfile.lock` to avoid needing to call `bundle platform --ruby` in the future. No change in behavior is expected. (https://github.com/heroku/heroku-buildpack-ruby/pull/1603)
+
+## [v309] - 2025-05-19
+
+- Default Ruby version is now 3.3.8 (https://github.com/heroku/heroku-buildpack-ruby/pull/1595)
+
+## [v308] - 2025-05-15
+
+- Removed support for Ubuntu 20.04 (and thus Heroku-20 / `heroku/builder:20`). This includes removing support for Ruby < 3.1 and Bundler < 2.3. (https://github.com/heroku/buildpacks-ruby/pull/1591)
+
 ## [v307] - 2025-05-14
 
 - Ruby 3.4.4 is now available
@@ -1698,7 +1710,10 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v307...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v310...main
+[v310]: https://github.com/heroku/heroku-buildpack-ruby/compare/v309...v310
+[v309]: https://github.com/heroku/heroku-buildpack-ruby/compare/v308...v309
+[v308]: https://github.com/heroku/heroku-buildpack-ruby/compare/v307...v308
 [v307]: https://github.com/heroku/heroku-buildpack-ruby/compare/v306...v307
 [v306]: https://github.com/heroku/heroku-buildpack-ruby/compare/v305...v306
 [v305]: https://github.com/heroku/heroku-buildpack-ruby/compare/v304...v305
