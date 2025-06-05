@@ -37,10 +37,10 @@ class LanguagePack::Rails4 < LanguagePack::Rails3
     plugins = ["rails_serve_static_assets", "rails_stdout_logging"].reject { |plugin| bundler.has_gem?(plugin) }
     return false if plugins.empty?
 
-    warn <<-WARNING
-Include 'rails_12factor' gem to enable all platform features
-See http://doc.scalingo.com/languages/ruby/rails-integration-gems for more information.
-WARNING
+    warn <<~WARNING
+      Include 'rails_12factor' gem to enable all platform features
+      See https://doc.scalingo.com/languages/ruby/rails-integration-gems for more information.
+    WARNING
     # do not install plugins, do not call super
   end
 

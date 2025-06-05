@@ -30,8 +30,9 @@ class LanguagePack::Ruby < LanguagePack::Base
     self.class.bundler
   end
 
-  def initialize(*args)
-    super(*args)
+  def initialize(app_path: , cache_path: , gemfile_lock:)
+    super(app_path: app_path, cache_path: cache_path, gemfile_lock: gemfile_lock)
+    @gemfile_lock = gemfile_lock
     @node_installer = LanguagePack::Helpers::NodeInstaller.new(arch: @arch)
     @yarn_installer = LanguagePack::Helpers::YarnInstaller.new
   end
@@ -62,19 +63,17 @@ class LanguagePack::Ruby < LanguagePack::Base
   end
 
   def best_practice_warnings
-    ## TODO No asset sync on Scalingo?
-    # if bundler.has_gem?("asset_sync")
-    #   warn(<<-WARNING)
-# You are using the `asset_sync` gem.
-# This is not recommended.
-# WARNING
-    # end
+    if bundler.has_gem?("asset_sync")
+      warn(<<~WARNING)
+        You are using the `asset_sync` gem.
+        This is not recommended.
+      WARNING
+    end
   end
 
   def compile
     # check for new app at the beginning of the compile
     new_app?
-    Dir.chdir(build_path)
     remove_vendor_bundle
     warn_bundler_upgrade
     warn_bad_binstubs
@@ -166,14 +165,13 @@ private
     old_bundler_version  = @metadata.read("bundler_version").strip if @metadata.exists?("bundler_version")
 
     if old_bundler_version && old_bundler_version != bundler.version
-      warn(<<-WARNING, inline: true)
-Your app was upgraded to bundler #{ bundler.version }.
-Previously you had a successful deploy with bundler #{ old_bundler_version }.
+      warn(<<~WARNING, inline: true)
+        Your app was upgraded to bundler #{ bundler.version }.
+        Previously you had a successful deploy with bundler #{ old_bundler_version }.
 
-If you see problems related to the bundler version please refer to:
-https://doc.scalingo.com/languages/ruby/start#bundler-version
-
-WARNING
+        If you see problems related to the bundler version please refer to:
+        https://doc.scalingo.com/languages/ruby/start#bundler-version
+      WARNING
     end
   end
 
@@ -196,7 +194,7 @@ WARNING
   # the relative path to the vendored ruby directory
   # @return [String] resulting path
   def slug_vendor_ruby
-    "vendor/#{ruby_version.version_without_patchlevel}"
+    "vendor/#{ruby_version.version_for_download}"
   end
 
   # fetch the ruby version from bundler
@@ -208,9 +206,33 @@ WARNING
     last_version      = nil
     last_version      = @metadata.read(last_version_file).strip if @metadata.exists?(last_version_file)
 
-    @ruby_version = LanguagePack::RubyVersion.new(bundler.ruby_version,
-      is_new:       new_app?,
-      last_version: last_version)
+    @ruby_version = LanguagePack::RubyVersion.bundle_platform_ruby(
+      bundler_output: bundler.ruby_version,
+      last_version: last_version
+    )
+
+    # New logic, running in parallel to old logic for reporting differences
+    lockfile_ruby_version = LanguagePack::RubyVersion.from_gemfile_lock(
+      ruby: @gemfile_lock.ruby,
+      last_version: last_version
+    )
+    @report.capture(
+      "gemfile_lock.ruby_version.version" => lockfile_ruby_version.ruby_version,
+      "gemfile_lock.ruby_version.engine" => lockfile_ruby_version.engine,
+      "gemfile_lock.ruby_version.engine.version" => lockfile_ruby_version.engine_version,
+      "gemfile_lock.ruby_version.major" => lockfile_ruby_version.major,
+      "gemfile_lock.ruby_version.minor" => lockfile_ruby_version.minor,
+      "gemfile_lock.ruby_version.patch" => lockfile_ruby_version.patch,
+      "gemfile_lock.ruby_version.default" => lockfile_ruby_version.default?,
+    )
+
+    if lockfile_ruby_version.version_for_download != @ruby_version.version_for_download
+      @report.capture(
+        "gemfile_lock.ruby_version.got" => lockfile_ruby_version.version_for_download,
+        "gemfile_lock.ruby_version.expected" => @ruby_version.version_for_download,
+        "gemfile_lock.ruby_version.different_version" => true,
+      )
+    end
     return @ruby_version
   end
 
@@ -230,32 +252,32 @@ WARNING
     # Unlike Heroku, we can't rely on `ulimit -u` to set WEB_CONCURRENCY sane
     # defaults. Instead we rely on CONTAINER_MEMORY.
 
-    <<-EOF
-memory_mb=$(( ${CONTAINER_MEMORY} / 1024 / 1024 ))
+    return <<~EOF
+      memory_mb=$(( ${CONTAINER_MEMORY} / 1024 / 1024 ))
 
-case ${memory_mb} in
-256)
-  export WEB_CONCURRENCY=${WEB_CONCURRENCY:-1}
-  ;;
-512)
-  export WEB_CONCURRENCY=${WEB_CONCURRENCY:-1}
-  ;;
-1024)
-  export WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
-  ;;
-2048)
-  export WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
-  ;;
-4096)
-  export WEB_CONCURRENCY=${WEB_CONCURRENCY:-4}
-  ;;
-8192)
-  export WEB_CONCURRENCY=${WEB_CONCURRENCY:-4}
-  ;;
-*)
-  ;;
-esac
-EOF
+      case ${memory_mb} in
+      256)
+        export WEB_CONCURRENCY=${WEB_CONCURRENCY:-1}
+        ;;
+      512)
+        export WEB_CONCURRENCY=${WEB_CONCURRENCY:-1}
+        ;;
+      1024)
+        export WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
+        ;;
+      2048)
+        export WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
+        ;;
+      4096)
+        export WEB_CONCURRENCY=${WEB_CONCURRENCY:-4}
+        ;;
+      8192)
+        export WEB_CONCURRENCY=${WEB_CONCURRENCY:-4}
+        ;;
+      *)
+        ;;
+      esac
+    EOF
   end
 
   # default JRUBY_OPTS
@@ -319,13 +341,13 @@ EOF
   # muiltibuildpack. We can't use profile.d because $HOME isn't set up
   def setup_export
     paths = ENV["PATH"].split(":").map do |path|
-      /^\/.*/ !~ path ? "#{build_path}/#{path}" : path
+      /^\/.*/ !~ path ? "#{app_path}/#{path}" : path
     end.join(":")
 
     # TODO ensure path exported is correct
     set_export_path "PATH", paths
 
-    gem_path = "#{build_path}/#{slug_vendor_base}"
+    gem_path = "#{app_path}/#{slug_vendor_base}"
     set_export_path "GEM_PATH", gem_path
     set_export_default "LANG", "en_US.UTF-8"
 
@@ -514,7 +536,7 @@ EOF
     @metadata.write("buildpack_ruby_version", ruby_version.version_for_download)
 
     topic "Using Ruby version: #{ruby_version.version_for_download}"
-    if !ruby_version.set
+    if ruby_version.default?
       warn(<<~WARNING)
         You have not declared a Ruby version in your Gemfile.
 
@@ -653,12 +675,12 @@ EOF
   # https://github.com/heroku/heroku-buildpack-ruby/issues/21
   def remove_vendor_bundle
     if File.exist?("vendor/bundle")
-      warn(<<-WARNING)
-Removing `vendor/bundle`.
-Checking in `vendor/bundle` is not supported. Please remove this directory
-and add it to your .gitignore. To vendor your gems with Bundler, use
-`bundle pack` instead.
-WARNING
+      warn(<<~WARNING)
+        Removing `vendor/bundle`.
+        Checking in `vendor/bundle` is not supported. Please remove this directory
+        and add it to your .gitignore. To vendor your gems with Bundler, use
+        `bundle pack` instead.
+      WARNING
       FileUtils.rm_rf("vendor/bundle")
     end
   end
@@ -765,63 +787,61 @@ WARNING
 
     topic("Writing config/database.yml to read from DATABASE_URL")
     File.open("config/database.yml", "w") do |file|
-      file.puts <<-DATABASE_YML
-<%
+      file.puts <<~DATABASE_YML
+        <%
 
-require 'cgi'
-require 'uri'
+        require 'cgi'
+        require 'uri'
 
-begin
-  uri = URI.parse(ENV["DATABASE_URL"])
-rescue URI::InvalidURIError
-  raise "Invalid DATABASE_URL"
-end
+        begin
+          uri = URI.parse(ENV["DATABASE_URL"])
+        rescue URI::InvalidURIError
+          raise "Invalid DATABASE_URL"
+        end
 
-raise "No RACK_ENV or RAILS_ENV found" unless ENV["RAILS_ENV"] || ENV["RACK_ENV"]
+        raise "No RACK_ENV or RAILS_ENV found" unless ENV["RAILS_ENV"] || ENV["RACK_ENV"]
 
-def attribute(name, value, force_string = false)
-  if value
-    value_string =
-      if force_string
-        '"' + value + '"'
-      else
-        value
-      end
-    "\#{name}: \#{value_string}"
-  else
-    ""
-  end
-end
+        def attribute(name, value, force_string = false)
+          if value
+            value_string =
+              if force_string
+                '"' + value + '"'
+              else
+                value
+              end
+            "\#{name}: \#{value_string}"
+          else
+            ""
+          end
+        end
 
-adapter = uri.scheme
+        adapter = uri.scheme
+        adapter = "postgresql" if adapter == "postgres"
 
-adapter = "mysql2"     if adapter == "mysql" and Module::const_defined?("Mysql2")
-adapter = "postgresql" if adapter == "postgres"
+        database = (uri.path || "").split("/")[1]
 
-database = (uri.path || "").split("/")[1]
+        username = uri.user
+        password = uri.password
 
-username = uri.user
-password = uri.password
+        host = uri.host
+        port = uri.port
 
-host = uri.host
-port = uri.port
+        params = CGI.parse(uri.query || "")
 
-params = CGI.parse(uri.query || "")
+        %>
 
-%>
+        <%= ENV["RAILS_ENV"] || ENV["RACK_ENV"] %>:
+          <%= attribute "adapter",  adapter %>
+          <%= attribute "database", database %>
+          <%= attribute "username", username %>
+          <%= attribute "password", password, true %>
+          <%= attribute "host",     host %>
+          <%= attribute "port",     port %>
 
-<%= ENV["RAILS_ENV"] || ENV["RACK_ENV"] %>:
-  <%= attribute "adapter",  adapter %>
-  <%= attribute "database", database %>
-  <%= attribute "username", username %>
-  <%= attribute "password", password, true %>
-  <%= attribute "host",     host %>
-  <%= attribute "port",     port %>
-
-<% params.each do |key, value| %>
-  <%= key %>: <%= value.first %>
-<% end %>
-        DATABASE_YML
+        <% params.each do |key, value| %>
+          <%= key %>: <%= value.first %>
+        <% end %>
+      DATABASE_YML
     end
   end
 
@@ -882,7 +902,7 @@ params = CGI.parse(uri.query || "")
   def add_node_js_binary
     return [] if node_js_preinstalled?
 
-    if Pathname(build_path).join("package.json").exist? ||
+    if Pathname(app_path).join("package.json").exist? ||
          bundler.has_gem?('execjs') ||
          bundler.has_gem?('webpacker')
 
@@ -922,7 +942,7 @@ params = CGI.parse(uri.query || "")
   def add_yarn_binary
     return [] if yarn_preinstalled?
 
-    if Pathname(build_path).join("yarn.lock").exist? || bundler.has_gem?('webpacker')
+    if Pathname(app_path).join("yarn.lock").exist? || bundler.has_gem?('webpacker')
 
       version = @yarn_installer.version
       old_version = @metadata.fetch("default_yarn_version") { version }

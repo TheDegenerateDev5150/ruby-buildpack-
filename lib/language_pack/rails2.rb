@@ -14,8 +14,8 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
     return is_rails2
   end
 
-  def initialize(*args)
-    super(*args)
+  def initialize(app_path: , cache_path: , gemfile_lock:)
+    super(app_path: app_path, cache_path: cache_path, gemfile_lock: gemfile_lock)
     @rails_runner = LanguagePack::Helpers::RailsRunner.new
   end
 
@@ -58,9 +58,9 @@ class LanguagePack::Rails2 < LanguagePack::Ruby
   def best_practice_warnings
     if env("RAILS_ENV") != "production"
       warn(<<-WARNING)
-You are deploying to a non-production environment: #{ env("RAILS_ENV").inspect }.
-This is not recommended in order to keep dev/prod parity.
-WARNING
+        You are deploying to a non-production environment: #{ env("RAILS_ENV").inspect }.
+        This is not recommended.
+      WARNING
     end
     super
   end
@@ -83,5 +83,4 @@ private
       set_env_default key, value
     end
   end
-
 end
