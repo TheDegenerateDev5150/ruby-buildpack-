@@ -30,6 +30,7 @@ install_bootstrap_ruby()
 {
   local bin_dir=$1
   local buildpack_dir=$2
+  local stack="${STACK:?Required env var STACK is not set}"
 
   # Multi-arch aware stack support
   if [ "$STACK" == "scalingo-24" ]; then
@@ -109,9 +110,10 @@ compile_buildpack_v2()
   if [ "$url" != "" ]; then
     echo "-----> Downloading Buildpack: ${name}"
 
-    if [[ "$url" =~ \.tgz$ ]] || [[ "$url" =~ \.tgz\? ]]; then
+    if [[ "$url" =~ \.tar\.xz$ ]]; then
       mkdir -p "$dir"
-      curl_retry_on_18 -s --fail --retry 3 --retry-connrefused --connect-timeout "${CURL_CONNECT_TIMEOUT:-3}" "$url" | tar xvz -C "$dir" >/dev/null 2>&1
+      curl_retry_on_18 -s --fail --retry 3 --retry-connrefused --connect-timeout "${CURL_CONNECT_TIMEOUT:-3}" "$url" \
+		  | tar --extract --xz --touch --directory="$dir" >/dev/null 2>&1
     else
       git clone "$url" "$dir" >/dev/null 2>&1
     fi
@@ -154,3 +156,42 @@ compile_buildpack_v2()
   fi
 }
 
+# After a stack is EOL, updates to the buildpack may fail with unexpected or unhelpful errors.
+# This can happen when the buildpack is being used off of the platform such as with `dokku`
+# which is not officially supported.
+function checks::ensure_supported_stack() {
+	local stack="${1}"
+
+	case "${stack}" in
+		# When removing support from a stack, move it to the bottom of the list
+		scalingo-20 | scalingo-22 | scalingo-24 | heroku-22 | heroku-24)
+			return 0
+			;;
+		heroku-18 | heroku-20)
+			# This error will only ever be seen on non-Heroku environments, since the
+			# Heroku build system rejects builds using EOL stacks.
+			cat <<-EOF
+				Error: The '${stack}' stack is no longer supported.
+
+				This buildpack no longer supports the '${stack}' stack since it has
+				reached its end-of-life:
+				https://doc.scalingo.com/platform/internals/stacks/stacks
+
+				Upgrade to a newer stack to continue using this buildpack.
+			EOF
+			exit 1
+			;;
+		*)
+			cat <<-EOF
+				Error: The '${stack}' stack isn't recognised.
+
+				This buildpack doesn't recognise or support the '${stack}' stack.
+
+				If '${stack}' is a valid stack, make sure that you are using the latest
+				version of this buildpack and haven't pinned to an older release:
+				https://doc.scalingo.com/platform/internals/stacks/stacks
+			EOF
+			exit 1
+			;;
+	esac
+}

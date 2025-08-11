@@ -2,6 +2,8 @@
 # The actual compilation code lives in `bin/support/ruby_compile`. This file instead
 # bootstraps the ruby needed and then executes `bin/support/ruby_compile`
 
+set -euo pipefail
+
 BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
@@ -11,8 +13,11 @@ BUILDPACK_DIR=$(dirname "$BIN_DIR")
 # shellcheck source=bin/support/bash_functions.sh
 source "$BIN_DIR/support/bash_functions.sh"
 
-bootstrap_ruby_dir="$( install_bootstrap_ruby "${BIN_DIR}" "${BUILDPACK_DIR}" )"
-export PATH="${bootstrap_ruby_dir}/bin/:${PATH}"
+checks::ensure_supported_stack "${STACK:?Required env var STACK is not set}"
+
+bootstrap_ruby_dir=$(install_bootstrap_ruby "$BIN_DIR" "$BUILDPACK_DIR")
+export PATH="$bootstrap_ruby_dir/bin/:$PATH"
+
 unset GEM_PATH
 
 if detect_needs_java "$BUILD_DIR"; then
@@ -29,7 +34,7 @@ if detect_needs_java "$BUILD_DIR"; then
 
 EOM
 
-  compile_buildpack_v2 "$BUILD_DIR" "$CACHE_DIR" "$ENV_DIR" "https://buildpack-registry.s3.us-east-1.amazonaws.com/buildpacks/heroku/jvm.tgz" "heroku/jvm"
+  compile_buildpack_v2 "$BUILD_DIR" "$CACHE_DIR" "$ENV_DIR" "https://buildpacks-repository.s3.eu-central-1.amazonaws.com/jvm-common.tar.xz" "buildpack-jvm-common"
 fi
 
 "$bootstrap_ruby_dir"/bin/ruby "$BIN_DIR/support/ruby_compile" "$@"
