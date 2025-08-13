@@ -10,53 +10,6 @@ curl_retry_on_18() {
   return $ec
 }
 
-# This function will install a version of Ruby onto the
-# system for the buildpack to use. It coordinates download
-# and setting appropriate env vars for execution
-#
-# Example:
-#
-#   install_bootstrap_ruby "$BIN_DIR" "$BUILDPACK_DIR"
-#
-# Takes two arguments, the first is the location of the buildpack's
-# `bin` directory. This is where the `download_ruby` script can be
-# found. The second argument is the root directory where Ruby
-# can be installed.
-#
-# This function relies on the env var `$STACK` being set. This
-# is set in codon outside of the buildpack. An example of a stack
-# would be "scalingo-22".
-install_bootstrap_ruby()
-{
-  local bin_dir=$1
-  local buildpack_dir=$2
-
-  # Multi-arch aware stack support
-  if [ "$STACK" == "scalingo-24" ]; then
-    local arch
-    arch=$(dpkg --print-architecture)
-    local heroku_buildpack_ruby_dir="$buildpack_dir/vendor/ruby/$STACK/$arch"
-  else
-    local heroku_buildpack_ruby_dir="$buildpack_dir/vendor/ruby/$STACK"
-  fi
-
-  # The -d flag checks to see if a file exists and is a directory.
-  # This directory may be non-empty if a previous compile has
-  # already placed a Ruby executable here.
-  if [ ! -d "$heroku_buildpack_ruby_dir" ]; then
-    heroku_buildpack_ruby_dir=$(mktemp -d)
-    # bootstrap ruby
-    "$bin_dir"/support/download_ruby "$bin_dir" "$heroku_buildpack_ruby_dir"
-    function atexit {
-      # shellcheck disable=SC2317
-      rm -rf "$heroku_buildpack_ruby_dir"
-    }
-    trap atexit EXIT
-  fi
-
-  echo "$heroku_buildpack_ruby_dir"
-}
-
 which_java()
 {
   which java > /dev/null
@@ -109,9 +62,10 @@ compile_buildpack_v2()
   if [ "$url" != "" ]; then
     echo "-----> Downloading Buildpack: ${name}"
 
-    if [[ "$url" =~ \.tgz$ ]] || [[ "$url" =~ \.tgz\? ]]; then
+    if [[ "$url" =~ \.tar\.xz$ ]]; then
       mkdir -p "$dir"
-      curl_retry_on_18 -s --fail --retry 3 --retry-connrefused --connect-timeout "${CURL_CONNECT_TIMEOUT:-3}" "$url" | tar xvz -C "$dir" >/dev/null 2>&1
+      curl_retry_on_18 -s --fail --retry 3 --retry-connrefused --connect-timeout "${CURL_CONNECT_TIMEOUT:-3}" "$url" \
+		  | tar --extract --xz --touch --directory="$dir" >/dev/null 2>&1
     else
       git clone "$url" "$dir" >/dev/null 2>&1
     fi
@@ -154,3 +108,42 @@ compile_buildpack_v2()
   fi
 }
 
+# After a stack is EOL, updates to the buildpack may fail with unexpected or unhelpful errors.
+# This can happen when the buildpack is being used off of the platform such as with `dokku`
+# which is not officially supported.
+function checks::ensure_supported_stack() {
+	local stack="${1}"
+
+	case "${stack}" in
+		# When removing support from a stack, move it to the bottom of the list
+		scalingo-20 | scalingo-22 | scalingo-24 | heroku-22 | heroku-24)
+			return 0
+			;;
+		heroku-18 | heroku-20)
+			# This error will only ever be seen on non-Heroku environments, since the
+			# Heroku build system rejects builds using EOL stacks.
+			cat <<-EOF
+				Error: The '${stack}' stack is no longer supported.
+
+				This buildpack no longer supports the '${stack}' stack since it has
+				reached its end-of-life:
+				https://doc.scalingo.com/platform/internals/stacks/stacks
+
+				Upgrade to a newer stack to continue using this buildpack.
+			EOF
+			exit 1
+			;;
+		*)
+			cat <<-EOF
+				Error: The '${stack}' stack isn't recognised.
+
+				This buildpack doesn't recognise or support the '${stack}' stack.
+
+				If '${stack}' is a valid stack, make sure that you are using the latest
+				version of this buildpack and haven't pinned to an older release:
+				https://doc.scalingo.com/platform/internals/stacks/stacks
+			EOF
+			exit 1
+			;;
+	esac
+}
