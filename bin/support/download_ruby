@@ -38,15 +38,21 @@ ruby_url() {
   fi
 }
 
-# Pull ruby version out of buildpack.toml to be used with bootstrapping
-regex=".*ruby_version = [\'\"]([0-9]+\.[0-9]+\.[0-9]+)[\'\"].*"
-if [[ $(cat "$BIN_DIR/../buildpack.toml") =~ $regex ]]
-  then
-    scalingo_buildpack_ruby_url=$(ruby_url "${STACK}" "${BASH_REMATCH[1]}")
-  else
-    scalingo_buildpack_ruby_url=""
-    echo "Could not detect ruby version to bootstrap"
-    exit 1
+# TEMP: Defaults to Ruby 3.3.8 for scalingo-20
+if [ "${STACK}" == "scalingo-20" ]
+then
+	scalingo_buildpack_ruby_url="$( ruby_url "${STACK}" "3.3.8" )"
+else
+	# Pull ruby version out of buildpack.toml to be used with bootstrapping
+	regex=".*ruby_version = [\'\"]([0-9]+\.[0-9]+\.[0-9]+)[\'\"].*"
+	if [[ $(cat "$BIN_DIR/../buildpack.toml") =~ $regex ]]
+  	then
+    	scalingo_buildpack_ruby_url=$(ruby_url "${STACK}" "${BASH_REMATCH[1]}")
+  	else
+    	scalingo_buildpack_ruby_url=""
+    	echo "Could not detect ruby version to bootstrap"
+    	exit 1
+	fi
 fi
 
 mkdir -p "$RUBY_BOOTSTRAP_DIR"
