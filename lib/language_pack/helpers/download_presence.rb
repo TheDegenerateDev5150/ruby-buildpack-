@@ -16,7 +16,7 @@
 #    puts download.exists? #=> true
 #    puts download.valid_stack_list #=> ['heroku-22', 'heroku-24']
 class LanguagePack::Helpers::DownloadPresence
-  STACKS = ['heroku-24', 'scalingo-20', 'scalingo-22']
+  STACKS = ['scalingo-20', 'scalingo-22', 'scalingo-24']
 
   def initialize(file_name:, arch: , multi_arch_stacks:, stacks: STACKS )
     @file_name = file_name

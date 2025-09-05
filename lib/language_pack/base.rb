@@ -18,7 +18,7 @@ class LanguagePack::Base
   VENDOR_URL           = ENV['BUILDPACK_VENDOR_URL'] || "https://ruby-binaries.scalingo.com"
   # DEFAULT_LEGACY_STACK = "scalingo"
   ROOT_DIR             = File.expand_path("../../..", __FILE__)
-  MULTI_ARCH_STACKS    = []
+  MULTI_ARCH_STACKS    = ["scalingo-24"]
   KNOWN_ARCHITECTURES  = ["amd64"]
 
   attr_reader :app_path, :cache, :stack
