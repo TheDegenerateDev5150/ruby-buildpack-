@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 
+## [v320] - 2025-09-09
+
+- Set `export PUMA_PERSISTENT_TIMEOUT=95` to match recommended router 2.0 settings (https://github.com/heroku/heroku-buildpack-ruby/pull/1641)
+
 ## [v319] - 2025-08-27
 
 - Add bash based failure metrics reporting for `bin/report`. This allows the buildpack to distinguish beteween types of failures that occur before Ruby code in the buildpack has executed (such as when bootstrapping). (https://github.com/heroku/heroku-buildpack-ruby/pull/1635)
@@ -1753,7 +1757,8 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v319...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v320...main
+[v320]: https://github.com/heroku/heroku-buildpack-ruby/compare/v319...v320
 [v319]: https://github.com/heroku/heroku-buildpack-ruby/compare/v318...v319
 [v318]: https://github.com/heroku/heroku-buildpack-ruby/compare/v317...v318
 [v317]: https://github.com/heroku/heroku-buildpack-ruby/compare/v316...v317
