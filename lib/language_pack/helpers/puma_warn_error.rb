@@ -10,23 +10,7 @@ class LanguagePack::Helpers::PumaWarnError
     @env = env
     @puma_version = puma_version
 
-    warn_router_2_0_compatibility
     error_persistent_timeout
-  end
-
-  private def warn_router_2_0_compatibility
-    return if @puma_version >= Gem::Version.new("7.0.3")
-    warnings << <<~WARNING
-      Scalingo recommends using Puma 7.0.3+ for compatibility with Router 2.0
-
-      Please upgrade your application to Puma 7.0.3+ by running the following commands:
-
-      ```
-      $ gem install puma
-      $ bundle update puma
-      $ git add Gemfile.lock && git commit -m "Upgrade Puma to 7.0.3+"
-      ```
-    WARNING
   end
 
   private def error_persistent_timeout
