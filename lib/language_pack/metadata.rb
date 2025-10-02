@@ -61,8 +61,8 @@ class LanguagePack::Metadata
   protected
 
   def ensure_sc_compat
-    if File.exist?('vendor/heroku') && !File.exist?(FOLDER)
-      FileUtils.mv('vendor/heroku', FOLDER)
+    if File.exist?('vendor/scalingo') && !File.exist?(FOLDER)
+      FileUtils.mv('vendor/scalingo', FOLDER)
     end
   end
 end

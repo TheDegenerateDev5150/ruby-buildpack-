@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 
+## [v322] - 2025-09-29
+
+- Set `export PUMA_PERSISTENT_TIMEOUT=95` to match recommended router 2.0 settings for Rails applications (https://github.com/heroku/heroku-buildpack-ruby/pull/1645)
+- Warn when using Puma prior to 7.0.0 for Router 2.0 compatibility (https://github.com/heroku/heroku-buildpack-ruby/pull/1645)
+- Error when using Puma 7.0.0 to 7.0.2 (inclusive) to prevent runtime error with `PUMA_PERSISTENT_TIMEOUT` (https://github.com/heroku/heroku-buildpack-ruby/pull/1645)
+- The `config_vars` field is no longer set in `bin/release`, this feature only affected the first deploy and is redundant with `.profile.d` usage that already exists. (https://github.com/heroku/heroku-buildpack-ruby/pull/1645)
+
 ## [v321] - 2025-09-16
 
 - Ruby 3.4.6 is now available
@@ -10,7 +17,7 @@
 
 ## [v320] - 2025-09-09
 
-- Set `export PUMA_PERSISTENT_TIMEOUT=95` to match recommended router 2.0 settings (https://github.com/heroku/heroku-buildpack-ruby/pull/1641)
+- Set `export PUMA_PERSISTENT_TIMEOUT=95` to match recommended router 2.0 settings for Rack applications (https://github.com/heroku/heroku-buildpack-ruby/pull/1641)
 
 ## [v319] - 2025-08-27
 
@@ -1762,7 +1769,8 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v321...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v322...main
+[v322]: https://github.com/heroku/heroku-buildpack-ruby/compare/v321...v322
 [v321]: https://github.com/heroku/heroku-buildpack-ruby/compare/v320...v321
 [v320]: https://github.com/heroku/heroku-buildpack-ruby/compare/v319...v320
 [v319]: https://github.com/heroku/heroku-buildpack-ruby/compare/v318...v319
