@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix `cp --update=none` warning `scalingo-24`
 
 ## [v324] - 2025-10-09
 
