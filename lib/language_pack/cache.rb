@@ -60,7 +60,7 @@ class LanguagePack::Cache
     dest ||= path
 
     case ENV["STACK"]
-    when "scalingo-20", "scalingo-22", "scalingo-24"
+    when "scalingo-20", "scalingo-22"
       copy (@cache_base + path), dest, "-a -n"
     else
       copy (@cache_base + path), dest, "-a --update=none"
