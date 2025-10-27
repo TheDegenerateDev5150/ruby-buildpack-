@@ -3,7 +3,7 @@ require "language_pack/base"
 
 # Store data about the build in the cache
 #
-# Uses `<cache_path>/vendor/heroku` as the metadata directory. Which
+# Uses `<cache_path>/vendor/scalingo` as the metadata directory. Which
 # is special cased in cache clearing code to be durable. This allows
 # for persistant generated data such as SECRET_KEY_BASE that would otherwise
 # cause session invalidation if it changed unexpectedly between deploys.

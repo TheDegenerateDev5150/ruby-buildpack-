@@ -32,8 +32,7 @@ no dependencies, then create an empty 'Gemfile', run 'bundle install' and
 commit the results to git.
 
 For help with using Ruby on Heroku, see:
-https://devcenter.heroku.com/articles/getting-started-with-ruby
-https://devcenter.heroku.com/articles/ruby-support
+https://doc.scalingo.com/languages/ruby/start
 EOF
 
 exit 1
