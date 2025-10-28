@@ -906,7 +906,7 @@ private
   def add_dev_database_addon
     return [] if env("HEROKU_SKIP_DATABASE_PROVISION")
 
-    pg_adapters.any? {|a| bundler.has_gem?(a) } ? ['heroku-postgresql'] : []
+    pg_adapters.any? {|a| bundler.has_gem?(a) } ? ['scalingo-postgresql'] : []
   end
 
   def pg_adapters
