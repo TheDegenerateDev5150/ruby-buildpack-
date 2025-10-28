@@ -137,30 +137,6 @@ class LanguagePack::Ruby < LanguagePack::Base
     raise e
   end
 
-  def warn_bundler_1x
-    bundler_versions = LanguagePack::Helpers::BundlerWrapper::BLESSED_BUNDLER_VERSIONS
-    if bundler.version == bundler_versions["1"]
-      warn(<<~EOF, inline: true)
-        Deprecating bundler 1.17.3
-
-        Your application requested bundler `1.x` in the `Gemfile.lock`
-        which resolved to `1.17.3`. This version is no longer maintained
-        by bundler core and will no longer work soon.
-
-        Please upgrade to bundler `2.3.x` or higher:
-
-        ```
-        $ gem install bundler -v #{bundler_versions["2.3"]}
-        $ bundle update --bundler
-        $ git add Gemfile.lock
-        $ git commit -m "Updated bundler version"
-        ```
-
-        https://doc.scalingo.com/languages/ruby/start#bundler-version
-      EOF
-    end
-  end
-
   def cleanup
   end
 
@@ -215,7 +191,7 @@ private
 
   def default_malloc_arena_max?
     return true if @metadata.exists?("default_malloc_arena_max")
-    return @metadata.touch("default_malloc_arena_max") if new_app?
+    return @metadata.write("default_malloc_arena_max", "true") if new_app?
 
     return false
   end
@@ -642,10 +618,6 @@ private
     error message
   end
 
-  def new_app?
-    @new_app ||= !app_path.join("vendor").join("scalingo").exist?
-  end
-
   # find the ruby install path for its binstubs during build
   # @return [String] resulting path or empty string if ruby is not vendored
   def ruby_install_binstub_path(ruby_layer_path = ".")
@@ -934,7 +906,7 @@ private
   def add_dev_database_addon
     return [] if env("HEROKU_SKIP_DATABASE_PROVISION")
 
-    pg_adapters.any? {|a| bundler.has_gem?(a) } ? ['heroku-postgresql'] : []
+    pg_adapters.any? {|a| bundler.has_gem?(a) } ? ['scalingo-postgresql'] : []
   end
 
   def pg_adapters
@@ -1119,7 +1091,6 @@ private
 
     full_ruby_version       = run_stdout(%q(ruby -v)).strip
     rubygems_version        = run_stdout(%q(gem -v)).strip
-    scalingo_metadata       = "vendor/scalingo"
     old_rubygems_version    = nil
     ruby_version_cache      = "ruby_version"
     buildpack_version_cache = "buildpack_version"
@@ -1152,13 +1123,11 @@ private
       purge_bundler_cache
     end
 
-    FileUtils.mkdir_p(scalingo_metadata)
-    @metadata.write(ruby_version_cache, full_ruby_version, false)
-    @metadata.write(buildpack_version_cache, BUILDPACK_VERSION, false)
-    @metadata.write(bundler_version_cache, bundler.version, false)
-    @metadata.write(rubygems_version_cache, rubygems_version, false)
-    @metadata.write(stack_cache, @stack, false)
-    @metadata.save
+    @metadata.write(ruby_version_cache, full_ruby_version)
+    @metadata.write(buildpack_version_cache, BUILDPACK_VERSION)
+    @metadata.write(bundler_version_cache, bundler.version)
+    @metadata.write(rubygems_version_cache, rubygems_version)
+    @metadata.write(stack_cache, @stack)
   end
 
   def purge_bundler_cache(stack = nil)
