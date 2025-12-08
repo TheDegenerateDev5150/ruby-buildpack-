@@ -17,12 +17,6 @@ require 'language_pack/fetcher'
 #   bundler.gem_version("railties") => "5.2.2"
 #   bundler.clean
 #
-# Also used to determine the version of Ruby that a project is using
-# based on `bundle platform --ruby`
-#
-#   bundler.ruby_version # => "ruby-2.5.1"
-#   bundler.clean
-#
 # IMPORTANT: Calling `BundlerWrapper#install` on this class mutates the environment variable
 # ENV['BUNDLE_GEMFILE']. If you're calling in a test context (or anything outside)
 # of an isolated dyno, you must call `BundlerWrapper#clean`. To reset the environment
@@ -42,21 +36,29 @@ class LanguagePack::Helpers::BundlerWrapper
   BLESSED_BUNDLER_VERSIONS["2.5"] = "2.5.23"
   BLESSED_BUNDLER_VERSIONS["2.6"] = "2.6.9"
   BLESSED_BUNDLER_VERSIONS["2.7"] = "2.7.2"
+  BLESSED_BUNDLER_VERSIONS["4.0"] = "4.0.0"
 
   SORTED_KEYS = BLESSED_BUNDLER_VERSIONS.keys.map { |k| Gem::Version.new(k) }.sort
-  SMALLEST = SORTED_KEYS.first.to_s
-  LARGEST = SORTED_KEYS.last.to_s
+  BUNDLER_2_SORTED_KEYS = SORTED_KEYS.select { |k| k.segments.first == 2 }
+  BUNDLER_2_SMALLEST = BUNDLER_2_SORTED_KEYS.first.to_s
+  BUNDLER_2_LARGEST = BUNDLER_2_SORTED_KEYS.last.to_s
+
+  BUNDLER_4_SORTED_KEYS = SORTED_KEYS.select { |k| k.segments.first == 4 }
+  BUNDLER_4_SMALLEST = BUNDLER_4_SORTED_KEYS.first.to_s
+  BUNDLER_4_LARGEST = BUNDLER_4_SORTED_KEYS.last.to_s
 
   DEFAULT_VERSION = BLESSED_BUNDLER_VERSIONS["2.3"]
 
   # Convert arbitrary `<Major>.<Minor>.x` versions
   BLESSED_BUNDLER_VERSIONS.default_proc = Proc.new do |hash, key|
     case Gem::Version.new(key).segments.first
+    when 4
+      hash[BUNDLER_4_LARGEST]
     when 2
-      if Gem::Version.new(key) > Gem::Version.new(LARGEST)
-        hash[LARGEST]
-      elsif Gem::Version.new(key) < Gem::Version.new(SMALLEST)
-        hash[SMALLEST]
+      if Gem::Version.new(key) > Gem::Version.new(BUNDLER_2_LARGEST)
+        hash[BUNDLER_2_LARGEST]
+      elsif Gem::Version.new(key) < Gem::Version.new(BUNDLER_2_SMALLEST)
+        hash[BUNDLER_2_SMALLEST]
       else
         raise UnsupportedBundlerVersion.new(hash, key)
       end
@@ -76,7 +78,7 @@ class LanguagePack::Helpers::BundlerWrapper
     end
   end
 
-  BUNDLED_WITH_REGEX = /^BUNDLED WITH$(\r?\n)   (?<version>(?<major>\d+)\.(?<minor>\d+)\.\d+)/m
+  BUNDLED_WITH_REGEX = /^BUNDLED WITH$(\r?\n) {2,3}(?<version>(?<major>\d+)\.(?<minor>\d+)\.\d+)/m
 
   class GemfileParseError < BuildpackError
     def initialize(error)
@@ -183,46 +185,6 @@ class LanguagePack::Helpers::BundlerWrapper
     @dir_name
   end
 
-  def ruby_version
-    env = { "PATH"     => "#{bundler_path}/bin:#{ENV['PATH']}",
-            "RUBYLIB"  => File.join(bundler_path, "gems", dir_name, "lib"),
-            "GEM_PATH" => "#{bundler_path}:#{ENV["GEM_PATH"]}",
-            "BUNDLE_DISABLE_VERSION_CHECK" => "true"
-          }
-    command = "bundle platform --ruby"
-
-    # Silently check for ruby version
-    output  = run_stdout(command, user_env: true, env: env).strip.lines.last
-
-    # If there's a gem in the Gemfile (i.e. syntax error) emit error
-    raise GemfileParseError.new(run("bundle check", user_env: true, env: env)) unless $?.success?
-
-    ruby_version = self.class.platform_to_version(output)
-    if ruby_version.nil? || ruby_version.empty?
-      warn(<<~WARNING, inline: true)
-        No ruby version specified in the Gemfile.lock
-
-        We could not determine the version of Ruby from your Gemfile.lock.
-
-          $ bundle platform --ruby
-          #{output}
-
-          $ bundle -v
-          #{run("bundle -v", user_env: true, env: env)}
-
-        Ensure the above command outputs the version of Ruby you expect. If you have a ruby version specified in your Gemfile, you can update the Gemfile.lock by running the following command:
-
-          $ bundle update --ruby
-
-        Make sure you commit the results to git before attempting to deploy again:
-
-          $ git add Gemfile.lock
-          $ git commit -m "update ruby version"
-      WARNING
-    end
-    ruby_version
-  end
-
   def self.platform_to_version(bundle_platform_output)
     if bundle_platform_output.match(/No ruby version specified/)
       ""
@@ -239,7 +201,7 @@ class LanguagePack::Helpers::BundlerWrapper
     topic("Removing BUNDLED WITH version in the Gemfile.lock")
     contents = File.read(@gemfile_lock_path, mode: "rt")
     File.open(@gemfile_lock_path, "w") do |f|
-      f.write contents.sub(/^BUNDLED WITH$(\r?\n)   (?<major>\d+)\.\d+\.\d+/m, '')
+      f.write contents.sub(/^BUNDLED WITH$(\r?\n) {2,3}(?<major>\d+)\.\d+\.\d+/m, '')
     end
   end
 
