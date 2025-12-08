@@ -5,9 +5,9 @@
 # methods or over writing methods defined here.
 class LanguagePack::Ruby
   def compile
-    new_app?
     remove_vendor_bundle
     warn_bad_binstubs
+    @ruby_version = get_ruby_version
     install_ruby(install_path: slug_vendor_ruby)
     setup_language_pack_environment(
       ruby_layer_path: File.expand_path("."),

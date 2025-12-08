@@ -4,6 +4,34 @@
 
 - Fix `cp --update=none` warning `scalingo-24`
 
+## [v333] - 2025-12-03
+
+- Ruby apps using bundler 4.0.x will now receive bundler 4.0.0 (https://github.com/heroku/heroku-buildpack-ruby/pull/1677)
+
+## [v332] - 2025-12-02
+
+- Ruby version is now pulled directly from `Gemfile.lock`. Previously the version was indirectly pulled
+  via shelling out to `bundle platform --ruby`, which requires that the version of Bundler must be resolved
+  and installed first. This new logic allows us to install the requested Ruby version before installing
+  bundler. (https://github.com/heroku/heroku-buildpack-ruby/pull/1665)
+
+## [v331] - 2025-12-02
+
+- Ruby apps using bundler 4.0.x will now receive bundler 4.0.0.beta2 (https://github.com/heroku/heroku-buildpack-ruby/pull/1673)
+
+## [v330] - 2025-12-02
+
+- Support `BUNDLED WITH` in `Gemfile.lock` with two spaces. This was [updated in bundler](https://github.com/ruby/rubygems/pull/9076). [#1668](https://github.com/heroku/heroku-buildpack-ruby/pull/1668)
+
+## [v329] - 2025-11-18
+
+- Fix "BUILD_DIR: unbound variable" error when deploying without a Gemfile with `heroku/ruby` buildpack [#1663](https://github.com/heroku/heroku-buildpack-ruby/pull/1663)
+
+## [v328] - 2025-11-17
+
+- Ruby 4.0.0-preview2 is now available
+
+
 ## [v327] - 2025-10-24
 
 - Ruby 3.3.10 is now available
@@ -1789,7 +1817,13 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v327...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v333...main
+[v333]: https://github.com/heroku/heroku-buildpack-ruby/compare/v332...v333
+[v332]: https://github.com/heroku/heroku-buildpack-ruby/compare/v331...v332
+[v331]: https://github.com/heroku/heroku-buildpack-ruby/compare/v330...v331
+[v330]: https://github.com/heroku/heroku-buildpack-ruby/compare/v329...v330
+[v329]: https://github.com/heroku/heroku-buildpack-ruby/compare/v328...v329
+[v328]: https://github.com/heroku/heroku-buildpack-ruby/compare/v327...v328
 [v327]: https://github.com/heroku/heroku-buildpack-ruby/compare/v326...v327
 [v326]: https://github.com/heroku/heroku-buildpack-ruby/compare/v325...v326
 [v325]: https://github.com/heroku/heroku-buildpack-ruby/compare/v324...v325
