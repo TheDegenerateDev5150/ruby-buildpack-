@@ -1,8 +1,27 @@
 # Changelog
 
-## [Unreleased]
+## [v338] - 2025-12-25
 
-- Fix `cp --update=none` warning `scalingo-24`
+- Ruby 4.0.0 is now available
+
+
+## [v337] - 2025-12-18
+
+- Ruby 4.0.0.preview3 is now available
+
+
+## [v336] - 2025-12-17
+
+- Ruby 3.4.8 is now available
+
+
+## [v335] - 2025-12-15
+
+- Ruby CI applications not using Rails now have `RACK_ENV=test` set (https://github.com/heroku/heroku-buildpack-ruby/pull/1683)
+
+## [v334] - 2025-12-12
+
+- Rolled back
 
 ## [v333] - 2025-12-03
 
@@ -1817,7 +1836,11 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v333...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v338...main
+[v338]: https://github.com/heroku/heroku-buildpack-ruby/compare/v337...v338
+[v337]: https://github.com/heroku/heroku-buildpack-ruby/compare/v336...v337
+[v336]: https://github.com/heroku/heroku-buildpack-ruby/compare/v335...v336
+[v335]: https://github.com/heroku/heroku-buildpack-ruby/compare/v334...v335
 [v333]: https://github.com/heroku/heroku-buildpack-ruby/compare/v332...v333
 [v332]: https://github.com/heroku/heroku-buildpack-ruby/compare/v331...v332
 [v331]: https://github.com/heroku/heroku-buildpack-ruby/compare/v330...v331
