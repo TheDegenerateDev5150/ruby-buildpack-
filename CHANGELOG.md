@@ -1,5 +1,53 @@
 # Changelog
 
+## [Unreleased]
+
+
+## [v343] - 2026-01-13
+
+- Ruby 4.0.1 is now available
+
+
+## [v342] - 2026-01-09
+
+- Update bundler version warning output (https://github.com/heroku/heroku-buildpack-ruby/pull/1697)
+
+
+## [v341] - 2026-01-09
+
+- Bundler version installed now directly matches the value in `BUNDLED WITH` from the `Gemfile.lock`
+  Previously, this value was converted to a "known good version." For example:
+
+  `BUNDLED WITH` 2.7.x installs `bundler 2.7.2`
+
+  Now, the exact version from the `Gemfile.lock` is installed instead. Applications without
+  a `BUNDLED WITH` value will receive a default bundler version. (https://github.com/heroku/heroku-buildpack-ruby/pull/1695)
+
+
+## [v340] - 2026-01-06
+
+- Bundler version is now installed via running `gem install bundler` previously it was pre-built
+  and downloaded directly from S3.
+
+ This change should be a refactor (no observed change in build behavior). If your app can build with `https://github.com/heroku/heroku-buildpack-ruby#v334` but not with this version, please open a
+ support ticket https://help.heroku.com/. (https://github.com/heroku/heroku-buildpack-ruby/pull/1680)
+
+
+## [v339] - 2026-01-05
+
+- Ruby is now installed before bundler. Previously, Bundler was used to detect the Ruby version by calling
+  `bundle platform --ruby`. Now that the Ruby version is detected directly from the  `Gemfile.lock`, the
+  order of installation can be changed such that Ruby is installed before Bundler.
+
+  This change should be a refactor (no observed change in build behavior), but involved substantial
+  internal changes. If your app can build with `https://github.com/heroku/heroku-buildpack-ruby#v335`
+  but not with this version, please open a support ticket https://help.heroku.com/. (https://github.com/heroku/heroku-buildpack-ruby/pull/1684)
+- The `PATH` order on Heroku CI relying on `bin/test` interface has changed for applications using the `heroku/ruby`
+  buildpack. It now starts with: `/app/bin:/app/vendor/bundle/bin:/app/vendor/bundle/ruby/3.3.0/bin` which matches
+  the behavior of regular `git push heroku` and customers who specify tests via `app.json`.
+  (https://github.com/heroku/heroku-buildpack-ruby/pull/1684)
+
+
 ## [v338] - 2025-12-25
 
 - Ruby 4.0.0 is now available
@@ -21,7 +69,7 @@
 
 ## [v334] - 2025-12-12
 
-- Rolled back
+- Rolled back due to https://github.com/heroku/heroku-buildpack-ruby/issues/1681
 
 ## [v333] - 2025-12-03
 
@@ -1836,11 +1884,17 @@ Bugfixes:
 * Change gem detection to use lockfile parser
 * use `$RACK_ENV` when thin is detected for rack apps
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v338...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-ruby/compare/v343...main
+[v343]: https://github.com/heroku/heroku-buildpack-ruby/compare/v342...v343
+[v342]: https://github.com/heroku/heroku-buildpack-ruby/compare/v341...v342
+[v341]: https://github.com/heroku/heroku-buildpack-ruby/compare/v340...v341
+[v340]: https://github.com/heroku/heroku-buildpack-ruby/compare/v339...v340
+[v339]: https://github.com/heroku/heroku-buildpack-ruby/compare/v338...v339
 [v338]: https://github.com/heroku/heroku-buildpack-ruby/compare/v337...v338
 [v337]: https://github.com/heroku/heroku-buildpack-ruby/compare/v336...v337
 [v336]: https://github.com/heroku/heroku-buildpack-ruby/compare/v335...v336
 [v335]: https://github.com/heroku/heroku-buildpack-ruby/compare/v334...v335
+[v334]: https://github.com/heroku/heroku-buildpack-ruby/compare/v333...v334
 [v333]: https://github.com/heroku/heroku-buildpack-ruby/compare/v332...v333
 [v332]: https://github.com/heroku/heroku-buildpack-ruby/compare/v331...v332
 [v331]: https://github.com/heroku/heroku-buildpack-ruby/compare/v330...v331
