@@ -573,7 +573,7 @@ class LanguagePack::Ruby < LanguagePack::Base
 
   # vendors individual binary into the slug
   # @param [String] name of the binary package from S3.
-  #   Example: https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com/node-0.4.7.tgz, where name is "node-0.4.7"
+  #   Example: https://heroku-buildpack-ruby.s3.dualstack.us-east-1.amazonaws.com/node-0.4.7.tgz, where name is "node-0.4.7"
   def install_binary(name)
     topic "Installing #{name}"
     bin_dir = "bin"
@@ -833,7 +833,7 @@ class LanguagePack::Ruby < LanguagePack::Base
     return @node_preinstall_bin_path if defined?(@node_preinstall_bin_path)
 
     legacy_path = "#{Dir.pwd}/#{NODE_BP_PATH}"
-    path = run("which node").strip
+    path = run("command -v node").strip
     @node_preinstall_bin_path = if path && $?.success?
       path
     elsif run("#{legacy_path}/node -v") && $?.success?
@@ -861,7 +861,7 @@ class LanguagePack::Ruby < LanguagePack::Base
   def self.yarn_preinstall_binary_path
     return @yarn_preinstall_binary_path if defined?(@yarn_preinstall_binary_path)
 
-    path = run("which yarn").strip
+    path = run("command -v yarn").strip
     @yarn_preinstall_binary_path = if path && $?.success?
       path
     else
