@@ -17,7 +17,7 @@ class LanguagePack::Base
 
   VENDOR_URL = ENV["BUILDPACK_VENDOR_URL"] || "https://ruby-binaries.scalingo.com"
   ROOT_DIR = File.expand_path("../../..", __FILE__)
-  AMD_ONLY_STACKS = ["heroku-22", "scalingo-22", "scalingo-24"]
+  AMD_ONLY_STACKS = ["heroku-22", "scalingo-22"]
   KNOWN_ARCHITECTURES = ["amd64"]
 
   attr_reader :app_path, :bundler, :cache, :environment_name, :stack
