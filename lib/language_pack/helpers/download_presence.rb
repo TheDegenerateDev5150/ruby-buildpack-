@@ -8,26 +8,28 @@
 #
 #    download = LanguagePack::Helpers::DownloadPresence.new(
 #      'ruby-3.1.7.tgz',
-#      stacks: ['heroku-22', 'heroku-24']
+#      stacks: ['heroku-22', 'heroku-24', 'heroku-26']
 #    )
 #
 #    download.call
 #
 #    puts download.exists? #=> true
-#    puts download.valid_stack_list #=> ['heroku-22', 'heroku-24']
+#    puts download.valid_stack_list #=> ['heroku-22', 'heroku-24', 'heroku-26']
 class LanguagePack::Helpers::DownloadPresence
-  STACKS = ['scalingo-20', 'scalingo-22', 'scalingo-24']
+  # all these stacks have identical ruby versions supported
+  STACKS = ["heroku-22", "heroku-24", "heroku-26",
+            "scalingo-22", "scalingo-24"]
 
-  def initialize(file_name:, arch:, multi_arch_stacks:, stacks: STACKS)
+  def initialize(file_name:, arch:, amd_only_stacks:, stacks: STACKS)
     @file_name = file_name
     @stacks = stacks
     @fetchers = []
     @threads = []
     @stacks.each do |stack|
-      @fetchers << if multi_arch_stacks.include?(stack)
-        LanguagePack::Fetcher.new(LanguagePack::Base::VENDOR_URL, stack: stack, arch: arch)
-      else
+      @fetchers << if amd_only_stacks.include?(stack)
         LanguagePack::Fetcher.new(LanguagePack::Base::VENDOR_URL, stack: stack)
+      else
+        LanguagePack::Fetcher.new(LanguagePack::Base::VENDOR_URL, stack: stack, arch: arch)
       end
     end
   end
