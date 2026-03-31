@@ -29,12 +29,12 @@ ruby_url() {
   local stack=$1
   local version=$2
 
-  if [ "$stack" == "scalingo-24" ]; then
+  if [ "$stack" == "scalingo-22" ]; then
+    echo "${BUILDPACK_VENDOR_URL:-"https://ruby-binaries.scalingo.com/${stack}/ruby-${version}.tgz"}"
+  else
     local arch
     arch=$(dpkg --print-architecture)
     echo "${BUILDPACK_VENDOR_URL:-"https://ruby-binaries.scalingo.com/${stack}/${arch}/ruby-${version}.tgz"}"
-  else
-    echo "${BUILDPACK_VENDOR_URL:-"https://ruby-binaries.scalingo.com/${stack}/ruby-${version}.tgz"}"
   fi
 }
 
