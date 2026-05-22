@@ -18,7 +18,7 @@
 class LanguagePack::Helpers::DownloadPresence
   # all these stacks have identical ruby versions supported
   STACKS = ["heroku-22", "heroku-24", "heroku-26",
-            "scalingo-22", "scalingo-24"]
+            "scalingo-22", "scalingo-24", "scalingo-26"]
 
   def initialize(file_name:, arch:, amd_only_stacks:, stacks: STACKS)
     @file_name = file_name
