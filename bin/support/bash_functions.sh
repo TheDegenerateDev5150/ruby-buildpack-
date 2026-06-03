@@ -84,10 +84,10 @@ compile_buildpack_v2()
   if [ "$url" != "" ]; then
     echo "-----> Downloading Buildpack: ${name}"
 
-	if [[ "$url" =~ \.tar\.xz$ ]]; then
-		mkdir -p "$dir"
-		if curl_retry_on_18 -s --fail --show-error --retry 3 --retry-connrefused --connect-timeout "${CURL_CONNECT_TIMEOUT:-3}" "$url" \
-			| tar --extract --xz --touch --directory="$dir"; then
+	if [[ "$url" =~ \.tgz$ ]] || [[ "$url" =~ \.tgz\? ]]; then
+		mkdir --parents "${dir}"
+		if curl_retry_on_18 --no-progress-meter --fail --retry 3 --retry-connrefused --connect-timeout "${CURL_CONNECT_TIMEOUT:-3}" "$url" \
+			| tar --extract --gzip --touch --directory="${dir}"; then
 			:
 		else
 			echo "Failed to download $url"
@@ -169,11 +169,10 @@ function checks::ensure_supported_stack() {
 	local stack="${1}"
 
 	case "${stack}" in
-		# When removing support from a stack, move it to the bottom of the list
-		scalingo-20 | scalingo-22 | scalingo-24 | scalingo-26 | heroku-22 | heroku-24 | heroku-26)
+		scalingo-22 | scalingo-24 | scalingo-26 | heroku-22 | heroku-24 | heroku-26)
 			return 0
 			;;
-		heroku-18 | heroku-20)
+		scalingo-20 | heroku-18 | heroku-20)
 			build_data::kv_string "failure_reason" "stack_eol"
 			build_data::kv_string "failure_detail" "${stack} stack"
 			# This error will only ever be seen on non-Heroku environments, since the
